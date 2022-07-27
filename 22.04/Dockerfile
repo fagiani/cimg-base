@@ -7,8 +7,8 @@ FROM ubuntu:22.04
 # Multiarch setup
 ARG TARGETPLATFORM
 ARG TARGETARCH
-ENV ARCH=${TARGETARCH/aarch64/arm64}
-ENV DOCKERIZE_ARCH=${TARGETARCH/aarch64/armhf}
+ENV ARCH=${TARGETARCH//aarch64/arm64}
+ENV DOCKERIZE_ARCH=${TARGETARCH//aarch64/armhf}
 
 LABEL maintainer="Community & Partner Engineering Team <community-partner@circleci.com>"
 
