@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+export DOCKER_CLI_EXPERIMENTAL=enabled
 docker buildx install
 docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 docker rm -f buildx_buildkit_docker-multiarch0
