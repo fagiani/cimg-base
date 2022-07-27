@@ -7,10 +7,6 @@ FROM %%PARENT%%:%%VERSION_FULL%%
 # Multiarch setup
 ARG TARGETPLATFORM
 ARG TARGETARCH
-RUN if [ "$TARGETARCH" = "arm64" ]; \
-    then export ARCH=armhf; \
-    else export ARCH=amd64; \
-    fi
 
 LABEL maintainer="Community & Partner Engineering Team <community-partner@circleci.com>"
 
@@ -42,6 +38,10 @@ RUN echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/90circleci && \
 	# Source repo: https://github.com/jwilder/dockerize
 	# I (Ricardo) would like to replace this one day. It's a tool not really
 	# maintained and we can likely offer something better.
+        if [ "$TARGETARCH" = "arm64" ]; \
+        then export ARCH=armhf; \
+        else export ARCH=amd64; \
+        fi \
 	curl -sSL --fail --retry 3 --output /tmp/dockerize.tar.gz "https://github.com/jwilder/dockerize/releases/download/v0.6.1/dockerize-linux-${ARCH}-v0.6.1.tar.gz" && \
 	tar -C /usr/local/bin -xzvf /tmp/dockerize.tar.gz && \
 	rm -rf /tmp/dockerize.tar.gz && \
