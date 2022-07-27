@@ -7,7 +7,10 @@ FROM ubuntu:22.04
 # Multiarch setup
 ARG TARGETPLATFORM
 ARG TARGETARCH
-ENV ARCH=
+RUN if [ "$TARGETARCH" = "arm64" ]; \
+    then export ARCH=armhf; \
+    else export ARCH=amd64; \
+    fi
 
 LABEL maintainer="Community & Partner Engineering Team <community-partner@circleci.com>"
 
@@ -39,7 +42,7 @@ RUN echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/90circleci && \
 	# Source repo: https://github.com/jwilder/dockerize
 	# I (Ricardo) would like to replace this one day. It's a tool not really
 	# maintained and we can likely offer something better.
-	curl -sSL --fail --retry 3 --output /tmp/dockerize.tar.gz "https://github.com/jwilder/dockerize/releases/download/v0.6.1/dockerize-linux-${TARGETARCH/aarch64/armhf}-v0.6.1.tar.gz" && \
+	curl -sSL --fail --retry 3 --output /tmp/dockerize.tar.gz "https://github.com/jwilder/dockerize/releases/download/v0.6.1/dockerize-linux-${ARCH}-v0.6.1.tar.gz" && \
 	tar -C /usr/local/bin -xzvf /tmp/dockerize.tar.gz && \
 	rm -rf /tmp/dockerize.tar.gz && \
 	# Quick test of Dockerize
@@ -106,7 +109,7 @@ RUN apt-get update && apt-get install -y \
 		gnupg-agent \
 		software-properties-common && \
 	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
-	add-apt-repository -y "deb [arch=${TARGETARCH/aarch64/arm64}] https://download.docker.com/linux/ubuntu $( lsb_release -cs ) stable" && \
+	add-apt-repository -y "deb [arch=${TARGETARCH}] https://download.docker.com/linux/ubuntu $( lsb_release -cs ) stable" && \
 	apt-get install -y docker-ce=${DOCKER_VERSION}$( lsb_release -cs ) docker-ce-cli=${DOCKER_VERSION}$( lsb_release -cs ) containerd.io && \
 	# Quick test of the Docker install
 	docker --version && \
@@ -121,7 +124,7 @@ ENV COMPOSE_SWITCH_VERSION 1.0.4
 RUN apt-get update && apt-get install --yes --no-install-recommends \
 		docker-compose-plugin=${COMPOSE_VER}~ubuntu-$( lsb_release -cs ) \
 	&& \
-	curl -fL https://github.com/docker/compose-switch/releases/download/v${COMPOSE_SWITCH_VERSION}/docker-compose-linux-${TARGETARCH/aarch64/arm64} -o /usr/local/bin/compose-switch && \
+	curl -fL https://github.com/docker/compose-switch/releases/download/v${COMPOSE_SWITCH_VERSION}/docker-compose-linux-${TARGETARCH} -o /usr/local/bin/compose-switch && \
 	# Quick test of the Docker Compose install
 	docker compose version && \
 	chmod +x /usr/local/bin/compose-switch && \
@@ -129,9 +132,9 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
 	# Tests if docker-compose for v1 is transposed to v2
 	docker-compose version
 
-RUN curl -sSL "https://github.com/mikefarah/yq/releases/download/v4.23.1/yq_linux_${TARGETARCH/aarch64/arm64}.tar.gz" | \
+RUN curl -sSL "https://github.com/mikefarah/yq/releases/download/v4.23.1/yq_linux_${TARGETARCH}.tar.gz" | \
 	tar -xz -C /usr/local/bin && \
-	mv /usr/local/bin/yq{_linux_${TARGETARCH/aarch64/arm64},}
+	mv /usr/local/bin/yq{_linux_${TARGETARCH},}
 
 USER circleci
 # Run commands and tests as circleci user
