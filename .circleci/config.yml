@@ -104,6 +104,7 @@ jobs:
           command: |
             echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
             ./build-images.sh
+            docker pull -a fagiani/cimg-base
             docker tag fagiani/cimg-base:18.04 fagiani/cimg-base:edge-18.04
             docker tag fagiani/cimg-base:20.04 fagiani/cimg-base:edge-20.04
             docker tag fagiani/cimg-base:22.04 fagiani/cimg-base:edge-22.04
@@ -128,7 +129,9 @@ jobs:
       - run:
           name: "Build & Tag Images"
           command: |
+            echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
             ./build-images.sh
+            docker pull -a fagiani/cimg-base
             docker tag fagiani/cimg-base:20.04 fagiani/cimg-base:current
             docker tag fagiani/cimg-base:18.04 fagiani/cimg-base:current-18.04
             docker tag fagiani/cimg-base:20.04 fagiani/cimg-base:current-20.04
@@ -145,7 +148,6 @@ jobs:
           name: "Publish Docker Images (main branch only)"
           command: |
             if [ "${CIRCLE_BRANCH}" == "main" ]; then
-              echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
               docker push fagiani/cimg-base:current
               docker push fagiani/cimg-base:current-18.04
               docker push fagiani/cimg-base:current-20.04
