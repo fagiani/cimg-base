@@ -113,9 +113,9 @@ jobs:
               # Copy multiarch images with new tags
               REGCLIENT_VER=0.4.4
               REGCLIENT_URL="https://github.com/regclient/regclient/releases/download/v${REGCLIENT_VER}/regctl-linux-amd64"
-	      curl -L $REGCLIENT_URL > $HOME/bin/regctl
-	      chmod 755 $HOME/bin/regctl
-              
+              curl -L $REGCLIENT_URL > $HOME/bin/regctl
+              chmod 755 $HOME/bin/regctl
+
               regctl image copy fagiani/cimg-base:18.04 fagiani/cimg-base:edge-18.04
               regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:edge-20.04
               regctl image copy fagiani/cimg-base:22.04 fagiani/cimg-base:edge-22.04
