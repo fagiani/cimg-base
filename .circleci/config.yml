@@ -106,18 +106,20 @@ jobs:
             echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
             docker pull -a fagiani/cimg-base
             ./build-images.sh
-            docker tag fagiani/cimg-base:18.04 fagiani/cimg-base:edge-18.04
-            docker tag fagiani/cimg-base:20.04 fagiani/cimg-base:edge-20.04
-            docker tag fagiani/cimg-base:22.04 fagiani/cimg-base:edge-22.04
-            docker tag fagiani/cimg-base:22.04 fagiani/cimg-base:edge
       - deploy:
           name: "Publish Docker Images (main branch only)"
           command: |
             if [ "${CIRCLE_BRANCH}" == "main" ]; then
-              docker push fagiani/cimg-base:edge-18.04
-              docker push fagiani/cimg-base:edge-20.04
-              docker push fagiani/cimg-base:edge-22.04
-              docker push fagiani/cimg-base:edge
+              # Copy multiarch images with new tags
+              REGCLIENT_VER=0.4.4
+              REGCLIENT_URL="https://github.com/regclient/regclient/releases/download/v${REGCLIENT_VER}/regctl-linux-amd64"
+	      curl -L $REGCLIENT_URL > $HOME/bin/regctl
+	      chmod 755 $HOME/bin/regctl
+              
+              regctl image copy fagiani/cimg-base:18.04 fagiani/cimg-base:edge-18.04
+              regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:edge-20.04
+              regctl image copy fagiani/cimg-base:22.04 fagiani/cimg-base:edge-22.04
+              regctl image copy fagiani/cimg-base:22.04 fagiani/cimg-base:edge
             fi
 
   publish-monthly:
@@ -133,47 +135,37 @@ jobs:
             echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
             docker pull -a fagiani/cimg-base
             ./build-images.sh
-            docker tag fagiani/cimg-base:20.04 fagiani/cimg-base:current
-            docker tag fagiani/cimg-base:18.04 fagiani/cimg-base:current-18.04
-            docker tag fagiani/cimg-base:20.04 fagiani/cimg-base:current-20.04
-            docker tag fagiani/cimg-base:22.04 fagiani/cimg-base:current-22.04
-            docker tag fagiani/cimg-base:20.04 fagiani/cimg-base:stable
-            docker tag fagiani/cimg-base:18.04 fagiani/cimg-base:stable-18.04
-            docker tag fagiani/cimg-base:20.04 fagiani/cimg-base:stable-20.04
-            VERSION=$( date +%Y.%m )
-            docker tag fagiani/cimg-base:20.04 fagiani/cimg-base:${VERSION}
-            docker tag fagiani/cimg-base:18.04 fagiani/cimg-base:${VERSION}-18.04
-            docker tag fagiani/cimg-base:20.04 fagiani/cimg-base:${VERSION}-20.04
-            docker tag fagiani/cimg-base:22.04 fagiani/cimg-base:${VERSION}-22.04
       - deploy:
           name: "Publish Docker Images (main branch only)"
           command: |
+            REGCLIENT_VER=0.4.4
+            REGCLIENT_URL="https://github.com/regclient/regclient/releases/download/v${REGCLIENT_VER}/regctl-linux-amd64"
+            curl -L $REGCLIENT_URL > $HOME/bin/regctl
+            chmod 755 $HOME/bin/regctl
+            VERSION=$( date +%Y.%m )
             if [ "${CIRCLE_BRANCH}" == "main" ]; then
-              docker push fagiani/cimg-base:current
-              docker push fagiani/cimg-base:current-18.04
-              docker push fagiani/cimg-base:current-20.04
-              docker push fagiani/cimg-base:current-22.04
-              docker push fagiani/cimg-base:stable
-              docker push fagiani/cimg-base:stable-18.04
-              docker push fagiani/cimg-base:stable-20.04
-              VERSION=$( date +%Y.%m )
-              docker push fagiani/cimg-base:${VERSION}
-              docker push fagiani/cimg-base:${VERSION}-18.04
-              docker push fagiani/cimg-base:${VERSION}-20.04
+              regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:current
+              regctl image copy fagiani/cimg-base:18.04 fagiani/cimg-base:current-18.04
+              regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:current-20.04
+              regctl image copy fagiani/cimg-base:22.04 fagiani/cimg-base:current-22.04
+              regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:stable
+              regctl image copy fagiani/cimg-base:18.04 fagiani/cimg-base:stable-18.04
+              regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:stable-20.04
+              regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:${VERSION}
+              regctl image copy fagiani/cimg-base:18.04 fagiani/cimg-base:${VERSION}-18.04
+              regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:${VERSION}-20.04
             elif [ "${CIRCLE_TAG}" == "monthly" ]; then
-              echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
-              docker push fagiani/cimg-base:current
-              docker push fagiani/cimg-base:current-18.04
-              docker push fagiani/cimg-base:current-20.04
-              docker push fagiani/cimg-base:current-22.04
-              docker push fagiani/cimg-base:stable
-              docker push fagiani/cimg-base:stable-18.04
-              docker push fagiani/cimg-base:stable-20.04
-              VERSION=$( date +%Y.%m )
-              docker push fagiani/cimg-base:${VERSION}
-              docker push fagiani/cimg-base:${VERSION}-18.04
-              docker push fagiani/cimg-base:${VERSION}-20.04
-              docker push fagiani/cimg-base:${VERSION}-22.04
+              regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:current
+              regctl image copy fagiani/cimg-base:18.04 fagiani/cimg-base:current-18.04
+              regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:current-20.04
+              regctl image copy fagiani/cimg-base:22.04 fagiani/cimg-base:current-22.04
+              regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:stable
+              regctl image copy fagiani/cimg-base:18.04 fagiani/cimg-base:stable-18.04
+              regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:stable-20.04
+              regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:${VERSION}
+              regctl image copy fagiani/cimg-base:18.04 fagiani/cimg-base:${VERSION}-18.04
+              regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:${VERSION}-20.04
+              regctl image copy fagiani/cimg-base:22.04 fagiani/cimg-base:${VERSION}-22.04
             fi
   schedule-fix:
     docker:
