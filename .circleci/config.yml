@@ -115,6 +115,7 @@ jobs:
       - run:
           name: "Build AMD64 Dockerfiles"
           command: |
+            export DOCKER_BUILDKIT=1
             docker build --file 18.04/Dockerfile -t cimg/base:18.04-amd64 .
             docker build --file 20.04/Dockerfile -t cimg/base:20.04-amd64 .
             docker build --file 22.04/Dockerfile -t cimg/base:22.04-amd64 .
@@ -144,6 +145,7 @@ jobs:
       - run:
           name: "Build ARM64 Dockerfiles"
           command: |
+            export DOCKER_BUILDKIT=1
             docker build --file 18.04/Dockerfile -t cimg/base:18.04-arm64 .
             docker build --file 20.04/Dockerfile -t cimg/base:20.04-arm64 .
             docker build --file 22.04/Dockerfile -t cimg/base:22.04-arm64 .
