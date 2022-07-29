@@ -116,6 +116,8 @@ jobs:
           name: "Build AMD64 Dockerfiles"
           command: |
             export DOCKER_BUILDKIT=1
+            export BUILDKIT_PROGRESS=plain
+            echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
             docker build --file 18.04/Dockerfile -t cimg/base:18.04-amd64 .
             docker build --file 20.04/Dockerfile -t cimg/base:20.04-amd64 .
             docker build --file 22.04/Dockerfile -t cimg/base:22.04-amd64 .
@@ -146,6 +148,8 @@ jobs:
           name: "Build ARM64 Dockerfiles"
           command: |
             export DOCKER_BUILDKIT=1
+            export BUILDKIT_PROGRESS=plain
+            echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
             docker build --file 18.04/Dockerfile -t cimg/base:18.04-arm64 .
             docker build --file 20.04/Dockerfile -t cimg/base:20.04-arm64 .
             docker build --file 22.04/Dockerfile -t cimg/base:22.04-arm64 .
@@ -164,6 +168,7 @@ jobs:
           name: "Upload manifests to registry"
           command: |
             export DOCKER_CLI_EXPERIMENTAL=enabled
+            echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
 
             docker manifest create fagiani/cimg-base:18.04 \
                                    fagiani/cimg-base:18.04-amd64 \
