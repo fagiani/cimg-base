@@ -118,25 +118,12 @@ jobs:
             export DOCKER_BUILDKIT=1
             export BUILDKIT_PROGRESS=plain
             echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
-            docker build --file 18.04/Dockerfile -t cimg/base:18.04-amd64 .
-            docker build --file 20.04/Dockerfile -t cimg/base:20.04-amd64 .
-            docker build --file 22.04/Dockerfile -t cimg/base:22.04-amd64 .
-            docker push cimg/base:18.04-amd64
-            docker push cimg/base:20.04-amd64
-            docker push cimg/base:22.04-amd64
-      - run:
-          name: "Publish Docker Hub Description (main branch only)"
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "main" ]; then
-              echo 'export DOCKER_PASS=$DOCKER_TOKEN' >> $BASH_ENV
-              # Update the Docker Hub description
-              SONAR_VER=0.15.0
-              SONAR_URL="https://github.com/felicianotech/sonar/releases/download/v${SONAR_VER}/sonar-v${SONAR_VER}-linux-amd64.tar.gz"
-              mkdir -p $HOME/bin
-              curl -sSL $SONAR_URL | tar -xz -C $HOME/bin sonar
-
-              sonar set description fagiani/cimg-base ./README.md
-            fi
+            docker build --file 18.04/Dockerfile -t fagiani/cimg-base:18.04-amd64 .
+            docker build --file 20.04/Dockerfile -t fagiani/cimg-base:20.04-amd64 .
+            docker build --file 22.04/Dockerfile -t fagiani/cimg-base:22.04-amd64 .
+            docker push fagiani/cimg-base:18.04-amd64
+            docker push fagiani/cimg-base:20.04-amd64
+            docker push fagiani/cimg-base:22.04-amd64
 
   test-arm64:
     machine:
@@ -150,12 +137,12 @@ jobs:
             export DOCKER_BUILDKIT=1
             export BUILDKIT_PROGRESS=plain
             echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
-            docker build --file 18.04/Dockerfile -t cimg/base:18.04-arm64 .
-            docker build --file 20.04/Dockerfile -t cimg/base:20.04-arm64 .
-            docker build --file 22.04/Dockerfile -t cimg/base:22.04-arm64 .
-            docker push cimg/base:18.04-arm64
-            docker push cimg/base:20.04-arm64
-            docker push cimg/base:22.04-arm64
+            docker build --file 18.04/Dockerfile -t fagiani/cimg-base:18.04-arm64 .
+            docker build --file 20.04/Dockerfile -t fagiani/cimg-base:20.04-arm64 .
+            docker build --file 22.04/Dockerfile -t fagiani/cimg-base:22.04-arm64 .
+            docker push fagiani/cimg-base:18.04-arm64
+            docker push fagiani/cimg-base:20.04-arm64
+            docker push fagiani/cimg-base:22.04-arm64
 
   publish-description:
     docker:
