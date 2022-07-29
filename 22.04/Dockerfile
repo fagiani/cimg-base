@@ -37,6 +37,7 @@ RUN echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/90circleci && \
 	# Source repo: https://github.com/jwilder/dockerize
 	# I (Ricardo) would like to replace this one day. It's a tool not really
 	# maintained and we can likely offer something better.
+	echo "BUILDARCH: $BUILDARCH"
         if [ "$BUILDARCH" = "arm64" ]; \
           then export ARCH=armhf; \
           else export ARCH=amd64; \
