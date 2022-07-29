@@ -182,6 +182,8 @@ jobs:
               mkdir -p $HOME/bin
               curl -sSL $SONAR_URL | tar -xz -C $HOME/bin sonar
 
+              echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
+
               sonar set description fagiani/cimg-base ./README.md
             fi
 
