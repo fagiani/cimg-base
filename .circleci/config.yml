@@ -14,7 +14,21 @@ workflows:
           filters:
             branches:
               ignore: /.*/
-      - test:
+      - test-amd64:
+          requires:
+            - schedule-fix
+          filters:
+            branches:
+              ignore: /.*/
+          context: cimg-publishing
+      - test-arm64:
+          requires:
+            - schedule-fix
+          filters:
+            branches:
+              ignore: /.*/
+          context: cimg-publishing
+      - publish-description:
           requires:
             - schedule-fix
           filters:
@@ -23,7 +37,8 @@ workflows:
           context: cimg-publishing
       - publish-monthly:
           requires:
-            - test
+            - test-amd64
+            - test-arm64
           filters:
             branches:
               ignore: /.*/
@@ -33,11 +48,19 @@ workflows:
       not: << pipeline.parameters.cron >>
     # Always runs. When the main branch runs, publishes the `edge` Docker tag
     jobs:
-      - test:
+      - test-amd64:
+          context: cimg-publishing
+      - test-arm64:
+          context: cimg-publishing
+      - publish-description:
+          requires:
+            - test-amd64
+            - test-arm64
           context: cimg-publishing
       - publish-edge:
           requires:
-            - test
+            - test-amd64
+            - test-arm64
           filters:
             branches:
               only: main
@@ -47,7 +70,24 @@ workflows:
       not: << pipeline.parameters.cron >>
     # Used to respin this month's snapshot
     jobs:
-      - test:
+      - test-amd64:
+          filters:
+            tags:
+              only: /^monthly$/
+            branches:
+              ignore: /.*/
+          context: cimg-publishing
+      - test-arm64:
+          filters:
+            tags:
+              only: /^monthly$/
+            branches:
+              ignore: /.*/
+          context: cimg-publishing
+      - publish-description:
+          requires:
+            - test-amd64
+            - test-arm64
           filters:
             tags:
               only: /^monthly$/
@@ -56,7 +96,8 @@ workflows:
           context: cimg-publishing
       - publish-monthly:
           requires:
-            - test
+            - test-amd64
+            - test-arm64
           filters:
             tags:
               only: /^monthly$/
@@ -65,25 +106,82 @@ workflows:
           context: cimg-publishing
 
 jobs:
-  test:
+  test-amd64:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: medium
+    steps:
+      - checkout
+      - run:
+          name: "Build AMD64 Dockerfiles"
+          command: |
+            docker build --file 18.04/Dockerfile -t cimg/base:18.04-amd64 .
+            docker build --file 20.04/Dockerfile -t cimg/base:20.04-amd64 .
+            docker build --file 22.04/Dockerfile -t cimg/base:22.04-amd64 .
+            docker push cimg/base:18.04-amd64
+            docker push cimg/base:20.04-amd64
+            docker push cimg/base:22.04-amd64
+      - run:
+          name: "Publish Docker Hub Description (main branch only)"
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "main" ]; then
+              echo 'export DOCKER_PASS=$DOCKER_TOKEN' >> $BASH_ENV
+              # Update the Docker Hub description
+              SONAR_VER=0.15.0
+              SONAR_URL="https://github.com/felicianotech/sonar/releases/download/v${SONAR_VER}/sonar-v${SONAR_VER}-linux-amd64.tar.gz"
+              mkdir -p $HOME/bin
+              curl -sSL $SONAR_URL | tar -xz -C $HOME/bin sonar
+
+              sonar set description fagiani/cimg-base ./README.md
+            fi
+
+  test-arm64:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
+    steps:
+      - checkout
+      - run:
+          name: "Build ARM64 Dockerfiles"
+          command: |
+            docker build --file 18.04/Dockerfile -t cimg/base:18.04-arm64 .
+            docker build --file 20.04/Dockerfile -t cimg/base:20.04-arm64 .
+            docker build --file 22.04/Dockerfile -t cimg/base:22.04-arm64 .
+            docker push cimg/base:18.04-arm64
+            docker push cimg/base:20.04-arm64
+            docker push cimg/base:22.04-arm64
+
+  publish-description:
     docker:
-      # references for this digest refers to cimg/base:2022.01
       - image: cimg/base@sha256:bf1a115683b4b0366dce294accf87ba967b9ad0d78f29d974b71dc7e79ffbee2
     steps:
       - checkout
       - setup_remote_docker:
           version: "20.10.11"
       - run:
-          name: "Build Dockerfiles"
+          name: "Upload manifests to registry"
           command: |
-            echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
-            docker pull -a fagiani/cimg-base
-            ./build-images.sh
-            echo 'export DOCKER_PASS=$DOCKER_TOKEN' >> $BASH_ENV
+            export DOCKER_CLI_EXPERIMENTAL=enabled
+
+            docker manifest create fagiani/cimg-base:18.04 \
+                                   fagiani/cimg-base:18.04-amd64 \
+                                   fagiani/cimg-base:18.04-arm64
+            docker manifest push fagiani/cimg-base:18.04
+
+            docker manifest create fagiani/cimg-base:20.04 \
+                                   fagiani/cimg-base:20.04-amd64 \
+                                   fagiani/cimg-base:20.04-arm64
+            docker manifest push fagiani/cimg-base:20.04
+
+            docker manifest create fagiani/cimg-base:22.04 \
+                                   fagiani/cimg-base:22.04-amd64 \
+                                   fagiani/cimg-base:22.04-arm64
+            docker manifest push fagiani/cimg-base:22.04
       - run:
           name: "Publish Docker Hub Description (main branch only)"
           command: |
             if [ "${CIRCLE_BRANCH}" == "main" ]; then
+              echo 'export DOCKER_PASS=$DOCKER_TOKEN' >> $BASH_ENV
               # Update the Docker Hub description
               SONAR_VER=0.15.0
               SONAR_URL="https://github.com/felicianotech/sonar/releases/download/v${SONAR_VER}/sonar-v${SONAR_VER}-linux-amd64.tar.gz"
@@ -100,20 +198,16 @@ jobs:
       - checkout
       - setup_remote_docker:
           version: "20.10.11"
-      - run:
-          name: "Build & Tag Images"
-          command: |
-            echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
-            docker pull -a fagiani/cimg-base
-            ./build-images.sh
       - deploy:
           name: "Publish Docker Images (main branch only)"
           command: |
             if [ "${CIRCLE_BRANCH}" == "main" ]; then
+              echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
               # Copy multiarch images with new tags
               REGCLIENT_VER=0.4.4
               REGCLIENT_URL="https://github.com/regclient/regclient/releases/download/v${REGCLIENT_VER}/regctl-linux-amd64"
-              curl -L $REGCLIENT_URL > $HOME/bin/regctl
+              mkdir -p $HOME/bin
+              curl -sSL $REGCLIENT_URL > $HOME/bin/regctl
               chmod 755 $HOME/bin/regctl
 
               regctl image copy fagiani/cimg-base:18.04 fagiani/cimg-base:edge-18.04
@@ -129,20 +223,17 @@ jobs:
       - checkout
       - setup_remote_docker:
           version: "20.10.11"
-      - run:
-          name: "Build & Tag Images"
-          command: |
-            echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
-            docker pull -a fagiani/cimg-base
-            ./build-images.sh
       - deploy:
           name: "Publish Docker Images (main branch only)"
           command: |
+            # Copy multiarch images with new tags
             REGCLIENT_VER=0.4.4
             REGCLIENT_URL="https://github.com/regclient/regclient/releases/download/v${REGCLIENT_VER}/regctl-linux-amd64"
-            curl -L $REGCLIENT_URL > $HOME/bin/regctl
+            mkdir -p $HOME/bin
+            curl -sSL $REGCLIENT_URL > $HOME/bin/regctl
             chmod 755 $HOME/bin/regctl
             VERSION=$( date +%Y.%m )
+            echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
             if [ "${CIRCLE_BRANCH}" == "main" ]; then
               regctl image copy fagiani/cimg-base:20.04 fagiani/cimg-base:current
               regctl image copy fagiani/cimg-base:18.04 fagiani/cimg-base:current-18.04

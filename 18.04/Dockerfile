@@ -39,8 +39,8 @@ RUN echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/90circleci && \
 	# I (Ricardo) would like to replace this one day. It's a tool not really
 	# maintained and we can likely offer something better.
         if [ "$TARGETARCH" = "arm64" ]; \
-        then export ARCH=armhf; \
-        else export ARCH=amd64; \
+          then export ARCH=armhf; \
+          else export ARCH=amd64; \
         fi && \
 	curl -sSL --fail --retry 3 --output /tmp/dockerize.tar.gz "https://github.com/jwilder/dockerize/releases/download/v0.6.1/dockerize-linux-${ARCH}-v0.6.1.tar.gz" && \
 	tar -C /usr/local/bin -xzvf /tmp/dockerize.tar.gz && \
