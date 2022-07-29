@@ -171,11 +171,12 @@ jobs:
                                    fagiani/cimg-base:22.04-amd64 \
                                    fagiani/cimg-base:22.04-arm64
             docker manifest push fagiani/cimg-base:22.04
+
+            echo 'export DOCKER_PASS=$DOCKER_TOKEN' >> $BASH_ENV
       - run:
           name: "Publish Docker Hub Description (main branch only)"
           command: |
             if [ "${CIRCLE_BRANCH}" == "main" ]; then
-              echo 'export DOCKER_PASS=$DOCKER_TOKEN' >> $BASH_ENV
               # Update the Docker Hub description
               SONAR_VER=0.15.0
               SONAR_URL="https://github.com/felicianotech/sonar/releases/download/v${SONAR_VER}/sonar-v${SONAR_VER}-linux-amd64.tar.gz"
